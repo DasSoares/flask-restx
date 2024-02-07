@@ -30,7 +30,6 @@ class CoursesAPI(Resource):
     @nsc.response(404, 'Registro não encontrado')
     @nsc.marshal_list_with(cm.item)
     def get(self):
-        print("to dentro da rota swagger")
         return CourseController().list(), 200
     
     @nsc.expect(cm.new) # novo item

@@ -17,11 +17,19 @@ class StudentController(object):
         db.session.commit()
         return student
     
-    def update(self, id: int, name: str):
+    def update(self, id: int, name: str, course_id: int = None):
         student = db.get_or_404(Student, id)
-        student.name = name
+        
+        if not name and not course_id:
+            raise Exception("Valor dos parâmetros inválidos")
+        
+        if name and name != student.name:
+            student.name = name
+        
+        student.course_id = course_id
         
         db.session.commit()
+        print("\n", student.id, student.name, student.course, student.course_id, "\n")
         return student
     
     def delete(self, id: int):

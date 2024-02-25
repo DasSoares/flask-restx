@@ -44,6 +44,14 @@ class StudentModel:
         })
     
     @property
+    def put(self):
+        return api.model("StudentPut", {
+            "id": fields.Integer,
+            "name": fields.String,
+            "course_id": fields.Integer
+        })
+    
+    @property
     def item(self):
         return api.model("StudentItem", {
             "id": fields.Integer,

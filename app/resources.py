@@ -1,11 +1,11 @@
-from flask_restx import Resource, Namespace
+from flask_restx import Resource, Namespace, abort
 from .api_models import CourseModel, StudentModel
 from .controllers.courses import CourseController
 from .controllers.students import StudentController
 
 from operator import itemgetter
 from functools import wraps
-import uuid, jwt
+import uuid, jwt, json
 from datetime import datetime
 
 # 
@@ -46,13 +46,34 @@ class CoursesAPI(Resource):
         return course, 200
 
 
-@nsc.route('/courses/<int:id>')
-@nsc.doc(params={'id': 'ID do curso'})
+@nsc.route('/<int:id>')
+@nsc.doc(params={'id': 'Id do curso'})
 class CoursesAPIID(Resource):
 
+    @nsc.marshal_list_with(cm.item) # retorna como o item de exemplo
+    def get(self, id: int):
+        course = CourseController()
+        data = course.get(id)
+        return data, 200
+
     def delete(self, id: int):
-        course = CourseController().delete(id=id)
-        return course, 204
+        CourseController().delete(id=id)
+        return None, 204
+
+@nsc.route('/students/<id>')
+@nsc.doc(params={'id': 'Id do curso'})
+class CoursesWithStudentsRelationsAPIByID(Resource):
+    
+    @nss.marshal_list_with(cm.with_relations)
+    def get(self, id):
+        return CourseController().get(id)
+    
+@nsc.route('/relations')
+class CoursesWithStudentsRelationsAPI(Resource):
+    
+    @nss.marshal_list_with(cm.with_relations)
+    def get(self):
+        return CourseController().list()
 
 
 @nss.route('/')
@@ -66,11 +87,21 @@ class StudentsAPI(Resource):
     @nss.marshal_list_with(sm.item)
     def post(self):
         name, course_id = itemgetter('name', 'course_id')(nss.payload)
-        studen = StudentController().add(name, course_id)
-        return studen, 201
+        student = StudentController().add(name, course_id)
+        return student, 201
     
+    @nss.expect(sm.put)
+    @nss.marshal_list_with(sm.with_relations)
+    @nss.response(400, 'Parametros incorretos')
     def put(self):
-        ...
+        id, name, course_id = itemgetter('id', 'name', 'course_id')(nss.payload)
+        student = StudentController()
+        
+        try:
+            data = student.update(id, name, course_id)
+            return data, 200
+        except Exception as e:
+            return abort(400, str(e))
     
 
 @nss.route('/relations')
@@ -81,10 +112,14 @@ class StudentsRelationsAPI(Resource):
         return StudentController().list()
 
 
-@nss.route('/by-course-id/<int:course_id>')
+@nss.route('/<id>')
 class StudentsByCoursesAPI(Resource):
     
-    @nss.marshal_list_with(cm.with_relations)
-    @nss.doc(params={ 'course_id': 'Id do curso'})
-    def get(self, course_id: int):
-        return CourseController().get(course_id)
+    @nss.marshal_list_with(sm.item)
+    @nss.doc(params={ 'id': 'Id do estudante'})
+    def get(self, id: int):
+        return StudentController().get(id)
+    
+    def delete(self, id: int):
+        StudentController().delete(id=id)
+        return None, 204

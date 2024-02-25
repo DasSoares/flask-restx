@@ -1,7 +1,7 @@
 from app.models import db
 from app.models import Student
 
-
+# create your controller here.
 class StudentController(object):
 
     def list(self):

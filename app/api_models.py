@@ -3,6 +3,16 @@ from .extensions import api
 
 from typing import Optional
 
+# Os Models são os modelos que define como será a entrada e saída de uma requisição (input e output)
+
+# Teste
+# class CourseModelResponseError:
+#     @property
+#     def not_found(self):
+#         return api.model("404", {
+#             "message": "Registro não encontrado!"
+#         })
+
 class CourseModel:
             
     @property

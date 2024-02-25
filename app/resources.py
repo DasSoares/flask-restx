@@ -1,4 +1,5 @@
 from flask_restx import Resource, Namespace, abort
+from werkzeug.exceptions import BadRequest, NotFound
 from .api_models import CourseModel, StudentModel
 from .controllers.courses import CourseController
 from .controllers.students import StudentController
@@ -8,9 +9,12 @@ from functools import wraps
 import uuid, jwt, json
 from datetime import datetime
 
-# 
+# Course
 cm = CourseModel()
+
+# Student
 sm = StudentModel()
+
 
 # Separador de endpoints chamados de Namespace
 ns = Namespace('/')
@@ -19,10 +23,12 @@ nss = Namespace('student')
 
 # read more: https://flask-restx.readthedocs.io/en/latest/swagger.html
 
-@ns.route("/hello")
+## Aqui ficam as rotas, você criar um arquivo para cada um.
+
+@ns.route("/hello") # endpoint na url
 class Hello(Resource):
-    def get(self):
-        return { 'hello': 'restx' }
+    def get(self):  # metodo que será utilizado na requisição
+        return { 'hello': 'restx' } # retorno da requisição
 
 
 @nsc.route('/')
@@ -46,10 +52,20 @@ class CoursesAPI(Resource):
         return course, 200
 
 
-@nsc.route('/<int:id>')
+@nsc.route('/<id>')
 @nsc.doc(params={'id': 'Id do curso'})
 class CoursesAPIID(Resource):
+    
+    @nsc.errorhandler(BadRequest)
+    def handle_bad_request_exception(error):
+        return { 'message': error.description }, 400
+    
+    @nsc.errorhandler(NotFound)
+    def handle_no_result_exception(error):
+        '''Return a custom not found error message and 404 status code'''
+        return {'message': "Registro não encontrado!"}, 404
 
+    # @nsc.response(404, 'Registro não encontrado')
     @nsc.marshal_list_with(cm.item) # retorna como o item de exemplo
     def get(self, id: int):
         course = CourseController()
